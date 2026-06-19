@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target Acquisition | Manager Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans pb-12">
+
+    <nav class="bg-white shadow-sm border-b-4 border-transparent" style="border-image: linear-gradient(to right, #0ea5e9, #10b981) 1;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-emerald-400">
+                        Target Acquisition
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500">Welcome, <strong id="userNameDisplay" class="text-gray-900">Manager</strong></span>
+                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800" id="userLineDisplay">
+                        Line
+                    </span>
+                    <button id="logoutBtn" class="text-sm font-medium text-rose-500 hover:text-rose-600 transition-colors">
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end space-y-4 sm:space-y-0">
+            <div>
+                <div class="flex items-center space-x-4 mb-3">
+                    <h2 class="text-2xl font-bold text-gray-900">Module:</h2>
+                    <select id="tableSelector" class="text-lg font-bold text-sky-600 bg-transparent border-b-2 border-sky-500 focus:outline-none focus:border-rose-400 pb-1 cursor-pointer">
+                        <option value="doctor">Doctor Targets</option>
+                        <option value="coaching">Coaching Targets</option>
+                        <option value="pharmacy">Pharmacy Targets</option>
+                        <option value="rtd">RTD</option>
+                        <option value="rx">RX</option>
+                        <option value="tl_calls">TL Calls</option>
+                        <option value="liquidation_per_product">Liquidation (Product)</option>
+                        <option value="liquidation_per_employee">Liquidation (Employee)</option>
+                    </select>
+                </div>
+                <div class="relative w-72">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" id="searchInput" placeholder="Filter targets (City, Name, Status...)" class="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-sky-500 focus:border-sky-500 w-full shadow-sm outline-none transition-all">
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-end space-y-3">
+                <div id="bulkActions" class="hidden flex items-center space-x-3 bg-sky-50 py-1 px-3 rounded-md border border-sky-200 shadow-sm">
+                    <span class="text-sm font-bold text-sky-800"><span id="selectedCount">0</span> Selected</span>
+                    <input type="number" id="bulkTargetValue" placeholder="Month Target" class="w-32 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 outline-none transition-all">
+                    <input type="number" id="bulkDailyValue" placeholder="Daily Target" class="w-32 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 outline-none transition-all">
+                    <button onclick="window.applyBulk()" class="px-3 py-1 bg-sky-500 text-white text-sm font-bold rounded shadow-sm hover:bg-sky-600 transition-colors">Bulk Fill</button>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div id="statusMessage" class="text-sm font-medium transition-opacity opacity-0"></div>
+                    <button id="submitBtn" class="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-semibold text-white bg-rose-500 hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition-colors disabled:opacity-50">
+                        Submit Targets
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-200">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 select-none">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="hidden py-12 text-center">
+                <p class="text-sm text-gray-500">No targets found for this module.</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="manager.js"></script>
+</body>
+</html>

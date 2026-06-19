@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target Acquisition | Admin Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans pb-12">
+
+    <nav class="bg-white shadow-sm border-b-4 border-transparent" style="border-image: linear-gradient(to right, #0ea5e9, #10b981) 1;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-emerald-400">
+                        Target Acquisition [Admin]
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500">Welcome, <strong id="userNameDisplay" class="text-gray-900">Admin</strong></span>
+                    <button id="logoutBtn" class="text-sm font-medium text-rose-500 hover:text-rose-600 transition-colors">
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end space-y-4 sm:space-y-0">
+            <div>
+                <div class="flex items-center space-x-4 mb-3">
+                    <h2 class="text-2xl font-bold text-gray-900">Review:</h2>
+                    <select id="tableSelector" class="text-lg font-bold text-rose-600 bg-transparent border-b-2 border-rose-500 focus:outline-none pb-1 cursor-pointer">
+                        <option value="doctor">Doctor Targets</option>
+                        <option value="coaching">Coaching Targets</option>
+                        <option value="pharmacy">Pharmacy Targets</option>
+                        <option value="rtd">RTD</option>
+                        <option value="rx">RX</option>
+                        <option value="tl_calls">TL Calls</option>
+                        <option value="liquidation_per_product">Liquidation (Product)</option>
+                        <option value="liquidation_per_employee">Liquidation (Employee)</option>
+                    </select>
+                </div>
+                <div class="relative w-72">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" id="searchInput" placeholder="Filter queue (Line, Name, Status...)" class="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-rose-500 focus:border-rose-500 w-full shadow-sm outline-none transition-all">
+                </div>
+            </div>
+            
+            <div id="bulkActions" class="hidden flex items-center space-x-3">
+                <span class="text-sm font-medium text-gray-600"><span id="selectedCount">0</span> Selected</span>
+                <button onclick="window.submitBulk('APPROVED')" class="px-4 py-2 bg-emerald-500 text-white text-sm font-bold rounded shadow-sm hover:bg-emerald-600 transition-colors">Approve All</button>
+                <button onclick="window.submitBulk('REJECTED')" class="px-4 py-2 bg-rose-500 text-white text-sm font-bold rounded shadow-sm hover:bg-rose-600 transition-colors">Reject All</button>
+            </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-200">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 select-none">
+                    <thead class="bg-gray-100">
+                        <tr>
+                             </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="hidden py-12 text-center">
+                <p class="text-sm text-gray-500">No data found in this module.</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin.js"></script>
+</body>
+</html>
