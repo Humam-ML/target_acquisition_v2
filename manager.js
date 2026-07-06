@@ -25,8 +25,8 @@ const baseColumns = [
     { key: 'derived_rep', label: 'Rep Name' },
     { key: 'derived_city', label: 'City' },
     { key: 'derived_team', label: 'Team / Line' },
-    { key: 'derived_date', label: 'Date' },
-    { key: 'target', label: 'Monthly Target' },
+    { key: 'derived_date', label: 'Quarter' },
+    { key: 'target', label: 'Target' },
     { key: 'daily_target', label: 'Daily Target' },
     { key: 'status', label: 'Status' }
 ];
@@ -38,8 +38,8 @@ const liquidationProductColumns = [
     { key: 'derived_rep', label: 'Rep Name' },
     { key: 'derived_city', label: 'City' },
     { key: 'derived_team', label: 'Team / Line' },
-    { key: 'derived_date', label: 'Date' },
-    { key: 'target', label: 'Monthly Target' },
+    { key: 'derived_date', label: 'Quarter' },
+    { key: 'target', label: 'Target' },
     { key: 'daily_target', label: 'Daily Target' },
     { key: 'status', label: 'Status' }
 ];
