@@ -26,8 +26,7 @@ const baseColumns = [
     { key: 'derived_city', label: 'City' },
     { key: 'derived_team', label: 'Team / Line' },
     { key: 'derived_date', label: 'Quarter' },
-    { key: 'target', label: 'Target' },
-    { key: 'daily_target', label: 'Daily Target' },
+    { key: 'target_per_month', label: 'target_per_month' },
     { key: 'status', label: 'Status' }
 ];
 
@@ -39,8 +38,7 @@ const liquidationProductColumns = [
     { key: 'derived_city', label: 'City' },
     { key: 'derived_team', label: 'Team / Line' },
     { key: 'derived_date', label: 'Quarter' },
-    { key: 'target', label: 'Target' },
-    { key: 'daily_target', label: 'Daily Target' },
+    { key: 'target_per_month', label: 'target_per_month' },
     { key: 'status', label: 'Status' }
 ];
 
@@ -112,14 +110,13 @@ window.fetchTargets = async function(tableName) {
             return {
                 ...row,
                 derived_entity: row.title || row.kpi || row.kpi_code || 'N/A',
-                derived_product: row.product_name || 'N/A', // NEW
-                derived_measure: row['Measure Unit'] || row.measure_unit || 'N/A', // NEW
+                derived_product: row.product_name || 'N/A', 
+                derived_measure: row['Measure Unit'] || row.measure_unit || 'N/A', 
                 derived_rep: row.rep_name || 'N/A',
                 derived_date: row.date || 'N/A',
                 derived_city: row.city || row.region || 'N/A',
                 derived_team: row.team || row.company_line || 'N/A',
-                current_input: row.target !== null && row.target !== undefined ? row.target : '',
-                current_daily_input: row.daily_target !== null && row.daily_target !== undefined ? row.daily_target : '',
+                current_input: row.target_per_month !== null && row.target_per_month !== undefined ? row.target_per_month : '',
                 selected: false
             };
         });
@@ -148,8 +145,7 @@ function getFilteredData() {
             if (filterText) {
                 // Route target logic to the correct tracked input state
                 let cellValue = row[key];
-                if (key === 'target' && row.current_input !== undefined) cellValue = row.current_input;
-                if (key === 'daily_target' && row.current_daily_input !== undefined) cellValue = row.current_daily_input;
+                if (key === 'target_per_month' && row.current_input !== undefined) cellValue = row.current_input;
 
                 if (cellValue === null || cellValue === undefined || !String(cellValue).toLowerCase().includes(filterText)) {
                     return false;
@@ -205,12 +201,9 @@ function renderTable() {
         let valA = a[sortCol] !== undefined && a[sortCol] !== null ? a[sortCol] : '';
         let valB = b[sortCol] !== undefined && b[sortCol] !== null ? b[sortCol] : '';
         
-        if (sortCol === 'target') {
+        if (sortCol === 'target_per_month') {
             valA = Number(a.current_input || 0);
             valB = Number(b.current_input || 0);
-        } else if (sortCol === 'daily_target') {
-            valA = Number(a.current_daily_input || 0);
-            valB = Number(b.current_daily_input || 0);
         }
 
         if (valA < valB) return sortAsc ? -1 : 1;
@@ -237,8 +230,8 @@ function renderTable() {
         </td>`;
 
         cols.forEach(col => {
-            if (col.key === 'target' || col.key === 'daily_target') {
-                const dataKey = col.key === 'target' ? 'current_input' : 'current_daily_input';
+            if (col.key === 'target_per_month') {
+                const dataKey = 'current_input';
                 tdHtml += `<td class="px-6 py-4 whitespace-nowrap">
                     <input type="number" class="target-input ${inputClass}" 
                         value="${row[dataKey]}" placeholder="0" ${isLocked ? 'disabled' : ''}
@@ -312,12 +305,10 @@ window.updateBulkUI = function() {
 
 window.applyBulk = function() {
     const bulkMonth = document.getElementById('bulkTargetValue')?.value;
-    const bulkDaily = document.getElementById('bulkDailyValue')?.value;
     
     masterData.forEach(item => {
         if (item.selected) {
             if (bulkMonth) item.current_input = bulkMonth;
-            if (bulkDaily) item.current_daily_input = bulkDaily;
         }
     });
     renderTable(); 
@@ -339,11 +330,10 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     btn.textContent = 'Saving...';
     
     const updates = masterData
-        .filter(item => (item.status === 'EMPTY' || item.status === 'REJECTED') && (item.current_input !== '' || item.current_daily_input !== ''))
+        .filter(item => (item.status === 'EMPTY' || item.status === 'REJECTED') && item.current_input !== '')
         .map(item => ({
             sub_id: item.sub_id,
-            target: Number(item.current_input || 0),
-            daily_target: Number(item.current_daily_input || 0)
+            target_per_month: Number(item.current_input || 0)
         }));
 
     if (updates.length === 0) {
