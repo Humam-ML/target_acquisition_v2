@@ -24,8 +24,7 @@ const baseColumns = [
     { key: 'derived_city', label: 'City' },
     { key: 'derived_team', label: 'Team / Line' },
     { key: 'derived_date', label: 'Quarter' },
-    { key: 'target', label: 'Target' },
-    { key: 'daily_target', label: 'Daily Target' },
+    { key: 'target_per_month', label: 'target_per_month' },
     { key: 'status', label: 'Status' }
 ];
 
@@ -37,8 +36,7 @@ const liquidationProductColumns = [
     { key: 'derived_city', label: 'City' },
     { key: 'derived_team', label: 'Team / Line' },
     { key: 'derived_date', label: 'Quarter' },
-    { key: 'target', label: 'Target' },
-    { key: 'daily_target', label: 'Daily Target' },
+    { key: 'target_per_month', label: 'target_per_month' },
     { key: 'status', label: 'Status' }
 ];
 
@@ -194,12 +192,9 @@ function renderTable() {
         let valA = a[sortCol] !== undefined && a[sortCol] !== null ? a[sortCol] : '';
         let valB = b[sortCol] !== undefined && b[sortCol] !== null ? b[sortCol] : '';
         
-        if (sortCol === 'target') {
-            valA = Number(a.target || 0);
-            valB = Number(b.target || 0);
-        } else if (sortCol === 'daily_target') {
-            valA = Number(a.daily_target || 0);
-            valB = Number(b.daily_target || 0);
+        if (sortCol === 'target_per_month') {
+            valA = Number(a.target_per_month || 0);
+            valB = Number(b.target_per_month || 0);
         }
 
         if (valA < valB) return sortAsc ? -1 : 1;
@@ -227,7 +222,7 @@ function renderTable() {
                 tdHtml += `<td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${statusColor} shadow-sm border">${row.status || 'EMPTY'}</span>
                 </td>`;
-            } else if (col.key === 'target' || col.key === 'daily_target') {
+            } else if (col.key === 'target_per_month') {
                 tdHtml += `<td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${row[col.key] || 0}</td>`;
             } else {
                 const textColor = col.key === 'company_line' ? 'text-sky-600' : 'text-gray-900';
