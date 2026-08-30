@@ -53,6 +53,16 @@ const tableColumns = {
     liquidation_per_employee: baseColumns
 };
 
+// Formats input with commas (e.g., 1000000 -> 1,000,000)
+window.formatNumberInput = function(inputElem) {
+    let rawValue = inputElem.value.replace(/\D/g, '');
+    if (rawValue === '') {
+        inputElem.value = '';
+        return;
+    }
+    inputElem.value = Number(rawValue).toLocaleString('en-US');
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('userNameDisplay').textContent = session.username;
     document.getElementById('userLineDisplay').textContent = session.company_line;
@@ -232,10 +242,12 @@ function renderTable() {
         cols.forEach(col => {
             if (col.key === 'target_per_month') {
                 const dataKey = 'current_input';
+                let displayVal = row[dataKey] ? Number(row[dataKey]).toLocaleString('en-US') : '';
+                
                 tdHtml += `<td class="px-6 py-4 whitespace-nowrap">
-                    <input type="number" class="target-input ${inputClass}" 
-                        value="${row[dataKey]}" placeholder="0" ${isLocked ? 'disabled' : ''}
-                        oninput="window.updateLocalData('${row.sub_id}', '${dataKey}', this.value)">
+                    <input type="text" class="target-input ${inputClass}" 
+                        value="${displayVal}" placeholder="0" ${isLocked ? 'disabled' : ''}
+                        oninput="window.formatNumberInput(this); window.updateLocalData('${row.sub_id}', '${dataKey}', this.value)">
                 </td>`;
             } else if (col.key === 'status') {
                 tdHtml += `<td class="px-6 py-4 whitespace-nowrap">
@@ -273,7 +285,10 @@ function renderTable() {
 
 window.updateLocalData = function(subId, dataKey, val) {
     const item = masterData.find(d => d.sub_id === subId);
-    if (item) item[dataKey] = val;
+    if (item) {
+        // Strip commas so the stored variable remains math-ready
+        item[dataKey] = val.replace(/,/g, ''); 
+    }
 };
 
 window.toggleSelection = function(subId, isChecked) {
@@ -305,10 +320,11 @@ window.updateBulkUI = function() {
 
 window.applyBulk = function() {
     const bulkMonth = document.getElementById('bulkTargetValue')?.value;
+    const cleanBulk = bulkMonth ? bulkMonth.replace(/,/g, '') : '';
     
     masterData.forEach(item => {
         if (item.selected) {
-            if (bulkMonth) item.current_input = bulkMonth;
+            if (cleanBulk) item.current_input = cleanBulk;
         }
     });
     renderTable(); 
