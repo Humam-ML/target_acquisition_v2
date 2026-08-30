@@ -223,7 +223,7 @@ function renderTable() {
                     <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${statusColor} shadow-sm border">${row.status || 'EMPTY'}</span>
                 </td>`;
             } else if (col.key === 'target_per_month') {
-                tdHtml += `<td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${row[col.key] || 0}</td>`;
+                tdHtml += `<td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${Number(row[col.key] || 0).toLocaleString('en-US')}</td>`;
             } else {
                 const textColor = col.key === 'company_line' ? 'text-sky-600' : 'text-gray-900';
                 tdHtml += `<td class="px-6 py-4 whitespace-nowrap text-sm font-bold ${textColor}">${row[col.key] || 'N/A'}</td>`;
