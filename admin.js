@@ -230,13 +230,21 @@ function renderTable() {
             }
         });
 
+        // ==========================================
+        // NEW UNDO REJECT LOGIC APPLIED HERE
+        // ==========================================
         let actionButtons = `<span class="text-xs text-gray-400">Locked</span>`;
         if (isPending) {
             actionButtons = `
                 <button onclick="window.updateStatus('${tableName}', '${row.sub_id}', 'APPROVED')" class="mr-3 text-sm font-bold text-emerald-600 hover:text-emerald-800 transition-colors">Approve</button>
                 <button onclick="window.updateStatus('${tableName}', '${row.sub_id}', 'REJECTED')" class="text-sm font-bold text-rose-600 hover:text-rose-800 transition-colors">Reject</button>
             `;
+        } else if (row.status === 'REJECTED') {
+            actionButtons = `
+                <button onclick="window.updateStatus('${tableName}', '${row.sub_id}', 'PENDING')" class="text-sm font-bold text-amber-500 hover:text-amber-700 transition-colors">Undo Reject</button>
+            `;
         }
+        
         tdHtml += `<td class="px-6 py-4 whitespace-nowrap text-right">${actionButtons}</td>`;
 
         tr.innerHTML = tdHtml;
