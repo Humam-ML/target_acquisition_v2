@@ -30,7 +30,7 @@ const baseColumns = [
     { key: 'status', label: 'Status' }
 ];
 
-// NEW: Custom layout specifically for Liquidation (Product)
+// Custom layout specifically for Liquidation (Product)
 const liquidationProductColumns = [
     { key: 'derived_product', label: 'Product Name' },
     { key: 'derived_measure', label: 'Measure Unit' },
@@ -116,7 +116,7 @@ window.fetchTargets = async function(tableName) {
             return;
         }
 
-       masterData = data.map(row => {
+        masterData = data.map(row => {
             return {
                 ...row,
                 derived_entity: row.title || row.kpi || row.kpi_code || 'N/A',
@@ -388,3 +388,122 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
         btn.textContent = 'Submit Targets';
     }
 });
+
+// ==========================================
+// EXCEL EXPORT & BULK IMPORT
+// ==========================================
+
+window.exportToExcel = function() {
+    const dataToExport = (typeof getFilteredData === 'function') ? getFilteredData() : masterData;
+    
+    if (!dataToExport || dataToExport.length === 0) {
+        alert("No data available to export.");
+        return;
+    }
+
+    const tableName = document.getElementById('tableSelector').value;
+    const internalKeys = [
+        'selected', 'current_input', 'derived_entity', 'derived_product', 
+        'derived_measure', 'derived_rep', 'derived_date', 'derived_city', 'derived_team'
+    ];
+    
+    const cleanData = dataToExport.map(row => {
+        const cleanRow = { ...row };
+        internalKeys.forEach(k => delete cleanRow[k]);
+        return cleanRow;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(cleanData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Targets");
+
+    XLSX.writeFile(workbook, `${tableName}_export.xlsx`);
+};
+
+window.importFromExcel = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const currentTable = document.getElementById('tableSelector').value;
+    const expectedName = `${currentTable}_export.xlsx`;
+
+    // 1. Strict Filename Guardrail
+    if (file.name !== expectedName) {
+        alert(`Upload blocked: Invalid file name.\nPlease upload the exact file for this module: "${expectedName}"`);
+        event.target.value = '';
+        return;
+    }
+
+    const importBtn = document.getElementById('importBtn');
+    const msg = document.getElementById('statusMessage');
+    const originalBtnHtml = importBtn ? importBtn.innerHTML : 'Import';
+    
+    if (importBtn) {
+        importBtn.disabled = true;
+        importBtn.textContent = 'Importing...';
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const rawJson = XLSX.utils.sheet_to_json(worksheet);
+
+            // 2. Strip extra columns and keep only sub_id + valid target_per_month
+            const updates = [];
+            rawJson.forEach(row => {
+                if (!row.sub_id) return;
+                
+                const rawTarget = row.target_per_month;
+                if (rawTarget === undefined || rawTarget === null || String(rawTarget).trim() === '') return;
+
+                const cleanTarget = Number(String(rawTarget).replace(/,/g, '').trim());
+                if (!isNaN(cleanTarget)) {
+                    updates.push({
+                        sub_id: String(row.sub_id).trim(),
+                        target_per_month: cleanTarget
+                    });
+                }
+            });
+
+            if (updates.length === 0) {
+                alert("No valid target values found in the uploaded Excel file.");
+                return;
+            }
+
+            // 3. Submit bulk updates directly to Supabase
+            const { error } = await supabaseClient.rpc('submit_bulk_targets', {
+                p_user_id: session.user_id,
+                p_table_name: currentTable,
+                p_payload: updates
+            });
+
+            if (error) throw error;
+
+            if (msg) {
+                msg.textContent = `Imported ${updates.length} targets!`;
+                msg.className = "text-sm font-bold text-emerald-600 transition-opacity opacity-100";
+                setTimeout(() => msg.classList.replace('opacity-100', 'opacity-0'), 3000);
+            } else {
+                alert(`Successfully imported and submitted ${updates.length} targets!`);
+            }
+
+            window.fetchTargets(currentTable);
+
+        } catch (err) {
+            console.error("Excel Import Error:", err);
+            alert(`Failed to import targets: ${err.message || 'Invalid Excel format.'}`);
+        } finally {
+            event.target.value = '';
+            if (importBtn) {
+                importBtn.disabled = false;
+                importBtn.innerHTML = originalBtnHtml;
+            }
+        }
+    };
+
+    reader.readAsArrayBuffer(file);
+};
