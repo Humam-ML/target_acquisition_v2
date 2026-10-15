@@ -112,6 +112,7 @@ window.fetchTargets = async function(tableName) {
 
         if (!data || data.length === 0) {
             masterData = [];
+            window.updateStatusCounts([]);
             emptyState.classList.remove('hidden');
             return;
         }
@@ -182,6 +183,29 @@ window.sortData = function(column) {
     renderTable();
 };
 
+window.updateStatusCounts = function(data) {
+    const counts = { EMPTY: 0, PENDING: 0, APPROVED: 0, REJECTED: 0 };
+    data.forEach(row => {
+        const s = row.status || 'EMPTY';
+        if (counts[s] !== undefined) {
+            counts[s]++;
+        } else {
+            counts.EMPTY++;
+        }
+    });
+
+    const setEl = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val.toLocaleString('en-US');
+    };
+
+    setEl('countTotal', data.length);
+    setEl('countEmpty', counts.EMPTY);
+    setEl('countPending', counts.PENDING);
+    setEl('countApproved', counts.APPROVED);
+    setEl('countRejected', counts.REJECTED);
+};
+
 function renderTable() {
     const tableName = document.getElementById('tableSelector').value;
     const theadRow = document.querySelector('thead tr');
@@ -206,6 +230,7 @@ function renderTable() {
     theadRow.innerHTML = thHtml;
 
     let displayData = getFilteredData();
+    window.updateStatusCounts(displayData);
 
     displayData.sort((a, b) => {
         let valA = a[sortCol] !== undefined && a[sortCol] !== null ? a[sortCol] : '';
