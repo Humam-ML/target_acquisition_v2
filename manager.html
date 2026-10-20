@@ -4,27 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Target Acquisition | Manager Dashboard</title>
+    <!-- Google Fonts: Inter (UI) & JetBrains Mono (Tabular Numbers) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- SheetJS Library for native Excel export/import -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        /* Custom subtle scrollbars for the data table */
+        .table-viewport::-webkit-scrollbar { width: 8px; height: 8px; }
+        .table-viewport::-webkit-scrollbar-track { background: #f8fafc; }
+        .table-viewport::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .table-viewport::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen font-sans pb-12">
+<body class="bg-slate-50 text-slate-900 min-h-screen font-sans pb-12 antialiased">
 
-    <nav class="bg-white shadow-sm border-b-4 border-transparent" style="border-image: linear-gradient(to right, #0ea5e9, #10b981) 1;">
+    <!-- Top Navigation Bar -->
+    <nav class="sticky top-0 z-30 bg-white/95 backdrop-blur shadow-sm border-b-4 border-transparent" style="border-image: linear-gradient(to right, #0ea5e9, #10b981) 1;">
         <div class="w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <div class="flex-shrink-0">
-                    <h1 class="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-emerald-400">
+                <div class="flex items-center space-x-3">
+                    <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-emerald-400 flex items-center justify-center text-white font-extrabold text-sm shadow-sm">
+                        TA
+                    </div>
+                    <h1 class="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-emerald-500 tracking-tight">
                         Target Acquisition
                     </h1>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-500">Welcome, <strong id="userNameDisplay" class="text-gray-900">Manager</strong></span>
-                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800" id="userLineDisplay">
+                    <span class="text-sm text-slate-500">Welcome, <strong id="userNameDisplay" class="text-slate-900 font-semibold">Manager</strong></span>
+                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200" id="userLineDisplay">
                         Line
                     </span>
-                    <button id="logoutBtn" class="text-sm font-medium text-rose-500 hover:text-rose-600 transition-colors">
+                    <button id="logoutBtn" class="text-sm font-semibold text-rose-500 hover:text-rose-600 px-2.5 py-1 rounded-md hover:bg-rose-50 transition-colors">
                         Sign Out
                     </button>
                 </div>
@@ -32,104 +59,140 @@
         </div>
     </nav>
 
-    <main class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        <div class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end space-y-4 sm:space-y-0">
-            <div>
-                <div class="flex items-center space-x-4 mb-3">
-                    <h2 class="text-2xl font-bold text-gray-900">Module:</h2>
-                    <select id="tableSelector" class="text-lg font-bold text-sky-600 bg-transparent border-b-2 border-sky-500 focus:outline-none focus:border-rose-400 pb-1 cursor-pointer">
-                        <option value="doctor">Doctor Targets</option>
-                        <option value="coaching">Coaching Targets</option>
-                        <option value="pharmacy">Pharmacy Targets</option>
-                        <option value="rtd">RTD</option>
-                        <option value="rx">RX</option>
-                        <option value="tl_calls">TL Calls</option>
-                        <option value="liquidation_per_product">Unit Liquidation</option>
-                        <option value="liquidation_per_employee">Liquidation (Employee)</option>
-                    </select>
+        <!-- Control Bar Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 sm:p-5 mb-5">
+            <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+                
+                <!-- Left: Module Selector, Search & Excel Actions -->
+                <div class="space-y-3">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <label for="tableSelector" class="text-xs font-bold uppercase tracking-wider text-slate-400">Module</label>
+                        <select id="tableSelector" class="text-lg font-extrabold text-sky-600 bg-sky-50/60 hover:bg-sky-50 border border-sky-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer transition-colors">
+                            <option value="doctor">Doctor Targets</option>
+                            <option value="coaching">Coaching Targets</option>
+                            <option value="pharmacy">Pharmacy Targets</option>
+                            <option value="rtd">RTD</option>
+                            <option value="rx">RX</option>
+                            <option value="tl_calls">TL Calls</option>
+                            <option value="liquidation_per_product">Unit Liquidation</option>
+                            <option value="liquidation_per_employee">Liquidation (Employee)</option>
+                        </select>
+                        <span class="hidden sm:inline-flex items-center text-xs text-slate-400 font-medium">
+                            Tip: Press <kbd class="mx-1 px-1.5 py-0.5 text-[11px] font-mono bg-slate-100 border border-slate-300 rounded text-slate-600">Enter</kbd> or <kbd class="mx-1 px-1.5 py-0.5 text-[11px] font-mono bg-slate-100 border border-slate-300 rounded text-slate-600">↓</kbd> to jump rows
+                        </span>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2.5">
+                        <div class="relative w-full sm:w-72">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input type="text" id="searchInput" placeholder="Filter targets (City, Name, Status...)" class="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 w-full shadow-sm outline-none transition-all">
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <!-- Export Button -->
+                            <button onclick="window.exportToExcel()" class="px-3.5 py-2 bg-emerald-600 text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm hover:bg-emerald-700 active:scale-[0.99] transition-all flex items-center">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Export
+                            </button>
+                            
+                            <!-- Import Button -->
+                            <button id="importBtn" onclick="document.getElementById('importFile').click()" class="px-3.5 py-2 bg-sky-600 text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm hover:bg-sky-700 active:scale-[0.99] transition-all flex items-center disabled:opacity-50">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                Import
+                            </button>
+                            
+                            <!-- Hidden File Input -->
+                            <input type="file" id="importFile" accept=".xlsx" class="hidden" onchange="window.importFromExcel(event)">
+
+                            <!-- Reset All Filters Button (shown when any filter is active) -->
+                            <button id="clearFiltersBtn" onclick="window.clearAllFilters()" class="hidden px-3 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-bold rounded-lg transition-colors">
+                                Reset Filters
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- Search and Action Buttons -->
-                <div class="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
-                    <div class="relative w-72">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        </div>
-                        <input type="text" id="searchInput" placeholder="Filter targets (City, Name, Status...)" class="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-sky-500 focus:border-sky-500 w-full shadow-sm outline-none transition-all">
+                <!-- Right: Bulk Fill & Submit Controls -->
+                <div class="flex flex-col sm:items-end justify-end space-y-3">
+                    <div id="bulkActions" class="hidden flex flex-wrap items-center gap-2 bg-sky-50/90 py-1.5 px-3 rounded-lg border border-sky-200 shadow-sm">
+                        <span class="text-xs font-extrabold text-sky-800 uppercase tracking-wide"><span id="selectedCount" class="font-mono">0</span> Selected</span>
+                        <input type="text" id="bulkTargetValue" oninput="window.formatNumberInput(this)" placeholder="target_per_month" class="w-40 px-2.5 py-1 text-sm font-mono tabular-nums border border-slate-300 rounded-md focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all bg-white">
+                        <button onclick="window.applyBulk()" class="px-3 py-1 bg-sky-600 text-white text-xs font-bold rounded-md shadow-sm hover:bg-sky-700 transition-colors">Bulk Fill</button>
                     </div>
 
-                    <!-- Export and Import Buttons -->
-                    <div class="flex items-center space-x-2">
-                        <!-- Export Button -->
-                        <button onclick="window.exportToExcel()" class="px-3 py-2 bg-emerald-600 text-white text-sm font-bold rounded shadow hover:bg-emerald-700 transition-colors flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            Export
+                    <div class="flex items-center space-x-3">
+                        <div id="statusMessage" class="text-sm font-medium transition-opacity opacity-0"></div>
+                        <button id="submitBtn" class="px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition-all disabled:opacity-50 flex items-center">
+                            <span>Submit Targets</span>
+                            <span id="unsavedCountBadge" class="hidden ml-2 px-2 py-0.5 text-xs font-mono bg-white/20 rounded-full">0</span>
                         </button>
-                        
-                        <!-- Import Button -->
-                        <button id="importBtn" onclick="document.getElementById('importFile').click()" class="px-3 py-2 bg-blue-600 text-white text-sm font-bold rounded shadow hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            Import
-                        </button>
-                        
-                        <!-- Hidden File Input -->
-                        <input type="file" id="importFile" accept=".xlsx" class="hidden" onchange="window.importFromExcel(event)">
                     </div>
                 </div>
             </div>
-            
-            <div class="flex flex-col items-end space-y-3">
-                <div id="bulkActions" class="hidden flex items-center space-x-3 bg-sky-50 py-1 px-3 rounded-md border border-sky-200 shadow-sm">
-                    <span class="text-sm font-bold text-sky-800"><span id="selectedCount">0</span> Selected</span>
-                    <input type="text" id="bulkTargetValue" oninput="window.formatNumberInput(this)" placeholder="target_per_month" class="w-48 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-sky-500 focus:border-sky-500 outline-none transition-all">
-                    <button onclick="window.applyBulk()" class="px-3 py-1 bg-sky-500 text-white text-sm font-bold rounded shadow-sm hover:bg-sky-600 transition-colors">Bulk Fill</button>
+
+            <!-- Interactive Status Counter Pills & Segmented Completion Bar -->
+            <div class="mt-4 pt-4 border-t border-slate-100">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button id="pill-ALL" onclick="window.filterByStatus('ALL')" class="px-3 py-1.5 rounded-lg bg-slate-900 text-white border border-slate-900 shadow-sm text-xs font-bold transition-all flex items-center">
+                            Total <span id="countTotal" class="ml-1.5 font-mono tabular-nums">0</span>
+                        </button>
+                        <button id="pill-EMPTY" onclick="window.filterByStatus('EMPTY')" class="px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 shadow-sm text-xs font-bold transition-all flex items-center">
+                            <span class="w-2 h-2 rounded-full bg-slate-400 mr-1.5"></span>
+                            Empty <span id="countEmpty" class="ml-1.5 font-mono tabular-nums">0</span>
+                        </button>
+                        <button id="pill-PENDING" onclick="window.filterByStatus('PENDING')" class="px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100/80 text-sky-700 border border-sky-200 shadow-sm text-xs font-bold transition-all flex items-center">
+                            <span class="w-2 h-2 rounded-full bg-sky-500 mr-1.5"></span>
+                            Pending <span id="countPending" class="ml-1.5 font-mono tabular-nums">0</span>
+                        </button>
+                        <button id="pill-APPROVED" onclick="window.filterByStatus('APPROVED')" class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100/80 text-emerald-700 border border-emerald-200 shadow-sm text-xs font-bold transition-all flex items-center">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>
+                            Approved <span id="countApproved" class="ml-1.5 font-mono tabular-nums">0</span>
+                        </button>
+                        <button id="pill-REJECTED" onclick="window.filterByStatus('REJECTED')" class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100/80 text-rose-700 border border-rose-200 shadow-sm text-xs font-bold transition-all flex items-center">
+                            <span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></span>
+                            Rejected <span id="countRejected" class="ml-1.5 font-mono tabular-nums">0</span>
+                        </button>
+                    </div>
+                    <div class="text-xs font-bold text-slate-500 font-mono tabular-nums">
+                        Submitted / Approved: <span id="completionPct" class="text-slate-800">0%</span>
+                    </div>
                 </div>
 
-                <div class="flex items-center space-x-4">
-                    <div id="statusMessage" class="text-sm font-medium transition-opacity opacity-0"></div>
-                    <button id="submitBtn" class="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-semibold text-white bg-rose-500 hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition-colors disabled:opacity-50">
-                        Submit Targets
-                    </button>
+                <!-- Segmented Progress Bar -->
+                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden flex">
+                    <div id="barApproved" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%" title="Approved"></div>
+                    <div id="barPending" class="bg-sky-500 h-full transition-all duration-300" style="width: 0%" title="Pending"></div>
+                    <div id="barRejected" class="bg-rose-500 h-full transition-all duration-300" style="width: 0%" title="Rejected"></div>
+                    <div id="barEmpty" class="bg-slate-200 h-full transition-all duration-300" style="width: 100%" title="Empty"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Live Status Summary Counter Bar -->
-        <div class="mb-4 flex flex-wrap items-center gap-3">
-            <div class="px-3 py-1.5 rounded-md bg-white border border-gray-200 shadow-sm text-xs font-bold text-gray-700">
-                Total: <span id="countTotal" class="ml-1 text-gray-900">0</span>
-            </div>
-            <div class="px-3 py-1.5 rounded-md bg-gray-50 border border-gray-200 shadow-sm text-xs font-bold text-gray-600">
-                Empty: <span id="countEmpty" class="ml-1">0</span>
-            </div>
-            <div class="px-3 py-1.5 rounded-md bg-sky-50 border border-sky-200 shadow-sm text-xs font-bold text-sky-700">
-                Pending: <span id="countPending" class="ml-1">0</span>
-            </div>
-            <div class="px-3 py-1.5 rounded-md bg-emerald-50 border border-emerald-200 shadow-sm text-xs font-bold text-emerald-700">
-                Approved: <span id="countApproved" class="ml-1">0</span>
-            </div>
-            <div class="px-3 py-1.5 rounded-md bg-rose-50 border border-rose-200 shadow-sm text-xs font-bold text-rose-700">
-                Rejected: <span id="countRejected" class="ml-1">0</span>
-            </div>
-        </div>
-
-        <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-200">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 select-none">
-                    <thead class="bg-gray-50">
-                        <tr>
+        <!-- Sticky Header Data Table Card -->
+        <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
+            <div class="table-viewport overflow-x-auto overflow-y-auto max-h-[70vh]">
+                <table class="min-w-full divide-y divide-slate-200 select-none">
+                    <thead class="bg-slate-50 sticky top-0 z-20 shadow-sm">
+                        <tr id="theadRow">
                         </tr>
                     </thead>
-                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                    <tbody id="tableBody" class="bg-white divide-y divide-slate-100">
                     </tbody>
                 </table>
             </div>
-            <div id="emptyState" class="hidden py-12 text-center">
-                <p class="text-sm text-gray-500">No targets found for this module.</p>
+            <div id="emptyState" class="hidden py-14 text-center">
+                <p class="text-sm text-slate-500 font-medium">No targets found for this module.</p>
             </div>
         </div>
     </main>
+
+    <!-- Slide-In Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
     <script src="manager.js"></script>
 </body>
