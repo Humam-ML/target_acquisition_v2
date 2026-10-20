@@ -18,7 +18,7 @@ let statusFilter = 'ALL';
 let columnFilters = {};
 let filterDebounceTimer = null;
 
-// Base layout for standard tables
+// Base layoutfor standard tables
 const baseColumns = [
     { key: 'derived_entity', label: 'KPI / Title' },
     { key: 'derived_rep', label: 'Rep Name' },
